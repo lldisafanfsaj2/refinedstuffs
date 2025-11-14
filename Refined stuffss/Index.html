@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refind Stuff</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family:Segoe UI,Arial,sans-serif;
+    color:white;
+    overflow-x:hidden;
+}
+
+/* LOADING */
+#loader{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:black;z-index:9999;display:flex;
+    justify-content:center;align-items:center;flex-direction:column;
+}
+.loader-ring{
+    width:70px;height:70px;border-radius:50%;
+    border:6px solid #A44AFF;border-top-color:#ff44cc;
+    animation:spin 1s linear infinite;
+}
+#loader p{margin-top:20px;font-size:1.4em;text-shadow:0 0 10px #A44AFF;}
+@keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+
+/* NAV BAR */
+nav{
+    position:fixed;top:0;left:0;width:100%;height:75px;
+    display:flex;align-items:center;justify-content:center;gap:45px;
+    background:rgba(0,0,0,0.25);border-bottom:1px solid rgba(255,255,255,0.15);
+    backdrop-filter:blur(7px);z-index:200;
+}
+nav a{
+    color:white;text-decoration:none;font-size:1.3em;font-weight:600;
+    text-shadow:0 0 8px #A44AFF,0 0 10px #ff44cc;transition:.25s;
+}
+nav a:hover,nav a.active{transform:scale(1.12);}
+
+/* PAGE SYSTEM */
+.page{
+    width:100%;opacity:0;pointer-events:none;transition:.35s;
+    position:absolute;top:100px;left:0;text-align:center;
+}
+.page.active{opacity:1;pointer-events:auto;}
+
+#home,#partners,#about,#settings{
+    min-height:calc(100vh - 100px);
+    overflow:auto;
+    display:flex;justify-content:center;align-items:center;
+}
+#games{
+    min-height:calc(100vh - 100px);overflow-y:auto;padding-bottom:80px;
+}
+
+/* HEADERS */
+.page h1{
+    font-size:4em;
+    text-shadow:0 0 15px #A44AFF,0 0 30px #ff44cc;
+    animation:fadein .6s ease;
+}
+@keyframes fadein{0%{opacity:0;transform:translateY(15px);}100%{opacity:1;transform:none;}}
+
+/* SEARCH */
+.search-box{margin-bottom:25px;margin-top:20px;}
+.search-input{
+    width:300px;padding:12px 18px;border-radius:12px;border:1px solid #A44AFF;
+    background:rgba(0,0,0,0.45);color:white;box-shadow:0 0 12px #A44AFF;
+}
+
+/* GAME GRID */
+.games-grid{
+    width:95%;
+    margin:0 auto;
+    display:grid;
+    gap:14px;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    justify-content:center;
+    justify-items:center;
+}
+
+.game-card{
+    width:240px;height:230px;border-radius:16px;overflow:hidden;
+    cursor:pointer;position:relative;
+    border:3px solid transparent;
+    animation:neon 4s linear infinite;
+}
+@keyframes neon{
+    0%{border-color:#A44AFF;}25%{border-color:#ff44cc;}
+    50%{border-color:#A44AFF;}75%{border-color:#ff44cc;}
+    100%{border-color:#A44AFF;}
+}
+.game-card:hover{transform:scale(1.07);box-shadow:0 0 35px white;}
+.game-card img{width:100%;height:100%;object-fit:cover;filter:brightness(.8);}
+.game-title{
+    position:absolute;bottom:0;width:100%;padding:8px;
+    background:rgba(0,0,0,0.55);
+}
+
+/* PLAYER */
+#player{display:flex;flex-direction:column;align-items:center;
+    height:calc(100vh - 100px);overflow:hidden;}
+.player-wrapper{
+    width:80vw;height:65vh;margin-top:25px;border-radius:15px;overflow:hidden;
+    box-shadow:0 0 20px #A44AFF,0 0 20px #ff44cc;
+}
+#gameFrame{width:100%;height:100%;border:none;}
+.action-row{display:flex;gap:20px;margin-top:15px;}
+.action-btn{
+    padding:10px 18px;background:black;border:1px solid #A44AFF;
+    border-radius:12px;cursor:pointer;color:white;
+}
+.action-btn:hover{transform:scale(1.1);}
+
+/* THEMES */
+body.theme-normal{background:#000;}
+body.theme-normal::before{
+    content:"";position:fixed;top:-20%;left:-20%;
+    width:140%;height:140%;
+    background:radial-gradient(circle,#5a1b9a 0%,#000 70%);
+    filter:blur(140px);
+    animation:orbmove 16s infinite;
+    z-index:-10;
+}
+@keyframes orbmove{0%{transform:translate(0,0);}50%{transform:translate(8%,10%);}100%{transform:translate(0,0);}}
+
+/* PARTICLES */
+#particles{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    z-index:-12;pointer-events:none;
+}
+
+/* SETTINGS */
+.settings-box{
+    display:flex;flex-direction:column;gap:20px;margin-top:20px;
+}
+.settings-btn{
+    width:250px;padding:12px;border-radius:12px;background:black;
+    border:1px solid #A44AFF;color:white;font-size:1.1em;cursor:pointer;
+    margin:auto;
+}
+.settings-btn:hover{transform:scale(1.08);}
+</style>
+</head>
+
+<body class="theme-normal">
+
+<div id="loader">
+    <div class="loader-ring"></div>
+    <p>Demon inspired me</p>
+</div>
+
+<canvas id="particles"></canvas>
+
+<nav>
+    <a href="#home" id="nav-home">Home</a>
+    <a href="#games" id="nav-games">Games</a>
+    <a href="#partners" id="nav-partners">Partners</a>
+    <a href="#about" id="nav-about">About</a>
+    <a href="#settings" id="nav-settings">Settings</a>
+</nav>
+
+<div id="home" class="page active">
+    <h1>Welcome to Refind Stuff</h1>
+</div>
+
+<div id="games" class="page">
+    <h1>Games</h1>
+
+    <div class="search-box">
+        <input class="search-input" id="gameSearch" placeholder="Search games..." oninput="filterGames()">
+    </div>
+
+    <div class="games-grid" id="gameGrid">
+
+        <!-- OFFICIAL GAMES -->
+        <div class="game-card" data-title="retro bowl" onclick="openGame('Retrobowl.html')">
+            <img src="retro_bowl_logo.png"><div class="game-title">Retro Bowl</div>
+        </div>
+
+        <div class="game-card" data-title="cookie clicker" onclick="openGame('cookieclicker.html')">
+            <img src="cookie.png"><div class="game-title">Cookie Clicker</div>
+        </div>
+
+        <div class="game-card" data-title="slope" onclick="openGame('Slope.html')">
+            <img src="Slope.png"><div class="game-title">Slope</div>
+        </div>
+
+        <div class="game-card" data-title="granny" onclick="openGame('granny.html')">
+            <img src="granny.png"><div class="game-title">Granny</div>
+        </div>
+
+        <div class="game-card" data-title="blood money" onclick="openGame('Bloodmoney.html')">
+            <img src="Bloodmoney.png"><div class="game-title">Bloodmoney</div>
+        </div>
+
+        <div class="game-card" data-title="burrito" onclick="openGame('burrito.html')">
+            <img src="burrito.png"><div class="game-title">Burrito</div>
+        </div>
+
+        <div class="game-card" data-title="crazy cattle 3d" onclick="openGame('Crazycattle3d.html')">
+            <img src="Crazycattle3d.png"><div class="game-title">Crazy Cattle 3D</div>
+        </div>
+
+        <div class="game-card" data-title="baldis basics" onclick="openGame('Baldisbasics.html')">
+            <img src="baldi1.png"><div class="game-title">Baldis Basics</div>
+        </div>
+
+        <div class="game-card" data-title="baldis basics classic remastered" onclick="openGame('Baldisbasics2.html')">
+            <img src="baldi2.png"><div class="game-title">Baldis Basics Classic Remastered</div>
+        </div>
+
+        <div class="game-card" data-title="baldis basics plus" onclick="openGame('Baldisbasics3.html')">
+            <img src="baldi3.png"><div class="game-title">Baldis Basics Plus</div>
+        </div>
+
+        <!-- SAMPLE CARD 1 → Basketrandom -->
+        <div class="game-card" data-title="basketrandom" onclick="openGame('Basketrandom.html')">
+            <img src="Basketrandom.png"><div class="game-title">Basketrandom</div>
+        </div>
+
+        <!-- SAMPLE CARD 2 → Boxingrandom -->
+        <div class="game-card" data-title="boxingrandom" onclick="openGame('Boxingrandom.html')">
+            <img src="Boxingrandom.png"><div class="game-title">Boxing Random</div>
+        </div>
+
+        <!-- SAMPLE CARD 3 → Basketbros -->
+        <div class="game-card" data-title="basketbros" onclick="openGame('Basketbros.html')">
+            <img src="Basketbros.png"><div class="game-title">Basketbros</div>
+        </div>
+
+        <!-- SAMPLE CARD 4 → Footballbros -->
+        <div class="game-card" data-title="footballbros" onclick="openGame('Footballbros.html')">
+            <img src="Footballbros.png"><div class="game-title">Footballbros</div>
+        </div>
+
+        <!-- SAMPLE CARD 5 → Ultrakill -->
+        <div class="game-card" data-title="ultrakill" onclick="openGame('ultrakill.html')">
+        <img src="ultrakill.png">
+        <div class="game-title">Ultrakill</div>
+        </div>
+
+        <!-- ⭐ SAMPLE CARD 6 → NOW Minecraft -->
+        <div class="game-card" data-title="minecraft" onclick="openGame('Minecraft.html')">
+            <img src="Minecraft.png"><div class="game-title">Minecraft</div>
+        </div>
+
+        <div class="game-card" data-title="brotato" onclick="openGame('Brotato.html')">
+        <img src="Brotato.png">
+        <div class="game-title">Brotato</div>
+        </div>
+
+        <div class="game-card" data-title="capybaraclicker" onclick="openGame('Capybaraclicker.html')">
+        <img src="Capybaraclicker.png"><div class="game-title">Capybara Clicker</div>
+        </div>
+
+        <div class="game-card" data-title="blockblast" onclick="openGame('Blockblast.html')">
+        <img src="Blockblast.png">
+        <div class="game-title">Block Blast</div>
+        </div>
+
+        <div class="game-card" data-title="Ovo" onclick="openGame('OVO.html')">
+        <img src="OVO.png">
+        <div class="game-title">OvO</div>
+        </div>
+        
+        <div class="game-card" data-title="Ovo 2" onclick="openGame('OvO 2.html')">
+        <img src="Ovo 2.png">
+        <div class="game-title">OvO 2</div>
+        </div>
+        
+                <div class="game-card" data-title="Ovo 3" onclick="openGame('oVo3.html')">
+        <img src="oVo3.png">
+        <div class="game-title">Ovo 3</div>
+        </div>
+        
+        <div class="game-card" data-title="sample 13"><div class="game-title">Sample 13</div></div>
+        <div class="game-card" data-title="sample 14"><div class="game-title">Sample 14</div></div>
+        <div class="game-card" data-title="sample 15"><div class="game-title">Sample 15</div></div>
+        <div class="game-card" data-title="sample 16"><div class="game-title">Sample 16</div></div>
+        <div class="game-card" data-title="sample 17"><div class="game-title">Sample 17</div></div>
+        <div class="game-card" data-title="sample 18"><div class="game-title">Sample 18</div></div>
+        <div class="game-card" data-title="sample 19"><div class="game-title">Sample 19</div></div>
+        <div class="game-card" data-title="sample 20"><div class="game-title">Sample 20</div></div>
+        <div class="game-card" data-title="sample 21"><div class="game-title">Sample 21</div></div>
+        <div class="game-card" data-title="sample 22"><div class="game-title">Sample 22</div></div>
+        <div class="game-card" data-title="sample 23"><div class="game-title">Sample 23</div></div>
+        <div class="game-card" data-title="sample 24"><div class="game-title">Sample 24</div></div>
+        <div class="game-card" data-title="sample 25"><div class="game-title">Sample 25</div></div>
+        <div class="game-card" data-title="sample 26"><div class="game-title">Sample 26</div></div>
+        <div class="game-card" data-title="sample 27"><div class="game-title">Sample 27</div></div>
+        <div class="game-card" data-title="sample 28"><div class="game-title">Sample 28</div></div>
+        <div class="game-card" data-title="sample 29"><div class="game-title">Sample 29</div></div>
+        <div class="game-card" data-title="sample 30"><div class="game-title">Sample 30</div></div>
+
+    </div>
+</div>
+
+<div id="partners" class="page">
+    <h1>Partners</h1>
+</div>
+
+<div id="about" class="page">
+    <h1>In Working...</h1>
+</div>
+
+<div id="settings" class="page">
+    <div>
+        <h1>Settings</h1>
+        <div class="settings-box">
+            <button id="themePopupBtnMain" class="settings-btn">Themes</button>
+            <button class="settings-btn" onclick="openBlank()">Open in about:blank</button>
+        </div>
+    </div>
+</div>
+
+<div id="player" class="page">
+    <h1 id="gameTitle">Game</h1>
+    <div class="player-wrapper">
+        <iframe id="gameFrame"></iframe>
+    </div>
+    <div class="action-row">
+        <button class="action-btn" onclick="fullscreen()">Fullscreen</button>
+        <button class="action-btn" onclick="backToGames()">Back</button>
+    </div>
+</div>
+
+<script>
+    // Stop game audio when leaving the player page
+window.addEventListener("hashchange", () => {
+    if (location.hash !== "#player") {
+        const frame = document.getElementById("gameFrame");
+        frame.src = ""; // unload the iframe = stops audio
+    }
+});
+
+window.addEventListener("load",()=>{
+    setTimeout(()=>{
+        const l=document.getElementById("loader");
+        l.style.opacity="0";l.style.transition="0.6s";
+        setTimeout(()=>l.remove(),600);
+    },700);
+});
+
+if(!location.hash)location.hash="#home";
+function route(){
+    const h=location.hash.replace("#","")||"home";
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
+    document.getElementById(h).classList.add("active");
+    const nav=document.getElementById("nav-"+h);
+    if(nav)nav.classList.add("active");
+}
+window.addEventListener("hashchange",route);
+window.addEventListener("load",route);
+
+function openGame(url){
+    document.getElementById("gameFrame").src=url;
+
+    let title="Game";
+    if(url.includes("oVo")) title="OvO 3";
+    if(url.includes("OvO")) title="OvO 2";
+    if(url.includes("OVO")) title="OvO 1";
+    if(url.includes("Hotline")) title="Hotline maimai";
+    if(url.includes("Blockblast")) title="Block Blast";
+    if(url.includes("Capy")) title="Capybara Clicker";
+    if(url.includes("brotato")) title="Brotato";
+    if(url.includes("Retro")) title="Retro Bowl";
+    if(url.includes("cookie")) title="Cookie Clicker";
+    if(url.includes("Slope")) title="Slope";
+    if(url.includes("granny")) title="Granny";
+    if(url.includes("Blood")) title="Bloodmoney";
+    if(url.includes("burrito")) title="Burrito";
+    if(url.includes("Crazyc")) title="Crazy Cattle 3D";
+    if(url.includes("Basket")) title="Basketrandom";
+    if(url.includes("Boxing")) title="Boxing Random";
+    if(url.includes("Basketbros")) title="Basketbros";
+    if(url.includes("Footballbros")) title="Footballbros";
+    if(url.includes("Minecraft")) title="Minecraft";
+
+    document.getElementById("gameTitle").innerText=title;
+    location.hash="player";
+}
+
+function backToGames(){location.hash="games";}
+function fullscreen(){document.getElementById("gameFrame").requestFullscreen();}
+
+function filterGames(){
+    const q=document.getElementById("gameSearch").value.toLowerCase();
+    const cards=[...document.querySelectorAll(".game-card")];
+    cards.forEach(c=>{
+        c.style.display=c.dataset.title.includes(q)?"flex":"none";
+    });
+    document.getElementById("gameGrid").style.justifyItems="center";
+}
+
+function setTheme(t){
+    document.body.className=t;
+    localStorage.setItem("theme",t);
+}
+window.addEventListener("load",()=>{
+    const saved=localStorage.getItem("theme");
+    if(saved)document.body.className=saved;
+});
+
+function openBlank(){
+    let win=window.open("about:blank","_blank");
+    win.document.write(document.documentElement.outerHTML);
+    win.document.close();
+}
+
+/* PARTICLES */
+const p=document.getElementById("particles");
+const ctx=p.getContext("2d");
+let w,h,pts=[];
+function resize(){w=p.width=innerWidth;h=p.height=innerHeight;}
+resize();addEventListener("resize",resize);
+for(let i=0;i<180;i++){
+    pts.push({x:Math.random()*w,y:Math.random()*h,s:Math.random()*2+1,v:.8+Math.random()});
+}
+function render(){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle="white";
+    pts.forEach(pt=>{
+        ctx.beginPath();
+        ctx.arc(pt.x,pt.y,pt.s,0,Math.PI*2);
+        ctx.fill();
+        pt.y+=pt.v;
+        if(pt.y>h)pt.y=-10;
+    });
+    requestAnimationFrame(render);
+}
+render();
+</script>
+
+<div id="themePopup" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); display:none; justify-content:center; align-items:center; z-index:9999;">
+    <div style="width:350px; max-height:70vh; overflow-y:auto; background:black; border:2px solid #A44AFF; border-radius:12px; padding:20px; box-shadow:0 0 20px #A44AFF;">
+        <h2 style="margin-bottom:15px;">Themes</h2>
+
+        <button class="settings-btn" onclick="setTheme('theme-normal')">Purple Theme</button>
+        <button class="settings-btn" onclick="setTheme('theme-christmas')">Christmas Theme</button>
+        <button class="settings-btn" onclick="setTheme('theme-grid')">Rainbow Grid</button>
+        <button class="settings-btn" onclick="setTheme('theme-cyber')">Cyber Neon</button>
+        <button class="settings-btn" onclick="setTheme('theme-matrix')">Digital Matrix</button>
+        <button class="settings-btn" onclick="setTheme('theme-vapor')">Vaporwave</button>
+        <button class="settings-btn" onclick="setTheme('theme-fire')">Firestorm</button>
+        <button class="settings-btn" onclick="setTheme('theme-ocean')">Ocean Glow</button>
+
+        <button class="settings-btn" style="background:#400; border-color:#900;" onclick="closeThemePopup()">Close</button>
+    </div>
+</div>
+
+<script>
+document.getElementById("themePopupBtnMain").onclick = () => {
+    document.getElementById("themePopup").style.display = "flex";
+};
+function closeThemePopup(){
+    document.getElementById("themePopup").style.display = "none";
+}
+</script>
+
+</body>
+</html>
